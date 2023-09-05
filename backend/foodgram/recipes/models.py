@@ -26,7 +26,7 @@ class Recipe(models.Model):
                                          verbose_name='Ингридиенты')
     tags = models.ManyToManyField('Tag', related_name='recipes',
                                   verbose_name='Теги')
-    Cooking_time = models.ImageField(verbose_name='Время приготовления')
+    Cooking_time = models.IntegerField(verbose_name='Время приготовления')
     pub_date = DateTimeField(auto_now_add=True, verbose_name='Дата публикации')
 
     
