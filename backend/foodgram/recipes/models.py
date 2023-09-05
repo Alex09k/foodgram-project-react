@@ -1,7 +1,7 @@
 from django.db import models 
 from django.contrib.auth import get_user_model
 from django.db.models.deletion import CASCADE
-from django.db.models import DateTimeField
+
 from colorfield.fields import ColorField
 from django.core.validators import MinValueValidator
 
