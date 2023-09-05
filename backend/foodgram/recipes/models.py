@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.db.models.deletion import CASCADE
 from django.db.models import DateTimeField
 from colorfield.fields import ColorField
+from django.core.validators import MinValueValidator
 
 
 User = get_user_model()
@@ -27,16 +28,16 @@ class Recipe(models.Model):
     tags = models.ManyToManyField('Tag', related_name='recipes',
                                   verbose_name='Теги')
     Cooking_time = models.IntegerField(verbose_name='Время приготовления')
-    pub_date = DateTimeField(auto_now_add=True, verbose_name='Дата публикации')
+    
 
     
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['-id']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return self.text[:15]
+        return self.name
 
 class Tag(models.Model):
     """Модель тега"""
@@ -73,15 +74,18 @@ class IngredientIntermediate(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE,
                                    related_name='ingredient_intermediate',
                                    verbose_name='Рецепт')
-    amount = models.IntegerField(verbose_name='Количество')
+    amount = models.PositiveSmallIntegerField('Количество',
+                                              validators=[MinValueValidator(1, message='Минимальное количество 1!')]
+                                              )
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,
-                               related_name='ingredient_contained', 
+                               related_name='ingredient_intermediate', 
                                verbose_name='Рецепт')
     
 
     def __str__(self):
-        return (f'Ингредиент {self.ingredient.name}'
-                f'в рецепте {self.recipe.name}')
+        return (
+            f'{self.ingredient.name} ({self.ingredient.units}) - {self.amount} '
+        )
     
     class Meta:
         verbose_name = 'Содержание ингредиента'
@@ -93,8 +97,6 @@ class IngredientIntermediate(models.Model):
             ),
         )
     
-
-
 
 
 
