@@ -11,7 +11,7 @@ User = get_user_model()
 
 class Recipe(models.Model):
     """Модель рецепта"""
-    author = models.ForeignKey(User, related_name = 'recipes', on_delete=CASCADE,
+    author = models.ForeignKey(User, on_delete=CASCADE, related_name = 'recipes',
                                verbose_name='Автор')
 
     name = models.CharField(max_length=100,
@@ -115,6 +115,48 @@ class Follow(models.Model):
 
     def __str__(self):
         return f'{self.user} подписался на {self.author}'
+
+
+class Favourite(models.Model):
+    """Модель избранное."""
+
+    user = models.ForeignKey(User, on_delete=CASCADE,
+                             related_name='favorites',
+                             verbose_name='Пользователь')
+    recipe = models.ForeignKey(Recipe, on_delete=CASCADE,
+                               related_name='favorites',
+                               verbose_name='Рецепт')
+    
+    class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
+        constraints = [models.UniqueConstraint(
+            fields=['user', 'recipe'], name='unique_favourite')
+        ]
+
+    def __str__(self):
+        return f'{self.user} добавил "{self.recipe}" в Избранное'
+    
+
+class ShoppingCart(models.Model):
+    """Модель корзины."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        related_name='shopping_cart',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',        
+        related_name='shopping_cart',
+    )
+
+    class Meta:
+        verbose_name = 'Покупка'
+        verbose_name_plural = 'Покупки'
+        
     
 
 
