@@ -2,21 +2,19 @@ from django.urls import include, path
 
 from rest_framework import routers
 from rest_framework.routers import DefaultRouter
-from .views import Receps
+from .views import RecipeViewSet, IngredientViewSet, TagViewSet
 
 
-# router = routers.DefaultRouter()
-# router_v1 = DefaultRouter()
+router = routers.DefaultRouter()
+router = DefaultRouter()
 
 
-# router_v1.register('recipes', RecipeViewSet, basename='recipes')
+router.register('recipes', RecipeViewSet, basename='recipes')
+router.register('ingredient', IngredientViewSet, basename='ingredient')
+router.register('tag', TagViewSet, basename='tag')
 
 
-# urlpatterns = [
-#     path('', include(router_v1.urls)),
-
-# ]    
 urlpatterns = [
-    path('recipes/', Receps.as_view()),
+    path('', include(router.urls)),
 
-] 
+]    
