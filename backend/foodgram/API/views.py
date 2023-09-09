@@ -3,7 +3,7 @@ from rest_framework import  viewsets
 from recipes.models import (Favourite, Follow, Ingredient, Recipe, ShoppingCart,
                             Tag)
 
-from .serializers import RecipeSerializer, IngredientSerializer, TaSerializer
+from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -13,7 +13,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
-    serializer_class = TaSerializer
+    serializer_class = TagSerializer
 
 
 
