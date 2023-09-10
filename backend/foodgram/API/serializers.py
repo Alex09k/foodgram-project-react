@@ -5,10 +5,13 @@ from recipes.models import (Favourite, Follow, Ingredient, Recipe, ShoppingCart,
 from django.db import transaction
 from rest_framework.fields import IntegerField, SerializerMethodField
 
+from users.models import CustomUser
+from drf_extra_fields.fields import Base64ImageField
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ("id","name", "units")
+        fields = ('id',"name", "units")
 
 
 
@@ -37,9 +40,10 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     
-    ingredients = IngredientRecipeSerializer(source='ingredient_contained',
+    ingredients = IngredientRecipeSerializer(source='ingredient_intermediate',
                                              many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+    image = Base64ImageField()
    
     
 
@@ -47,7 +51,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                    'name', 'text',
-                  'Cooking_time')
+                  'cooking_time', "image")
 
 
 class AddIngredientSerializer(serializers.ModelSerializer):
@@ -55,22 +59,23 @@ class AddIngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientIntermediate
-        fields = ('id', 'amount')
+        fields = ('id',)
 
 
-class RecipeCreateSerializer(serializers.ModelSerializer):
+class RecipeWriteSerializer(serializers.ModelSerializer):
     
     ingredients = AddIngredientSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True,
     )
+    image = Base64ImageField()
     
 
     class Meta:
         model = Recipe
         fields = ('id', 'author', 'ingredients', 'tags', 'name',
-                  'text', 'cooking_time',)
+                  'text', 'cooking_time', 'image')
 
     def validate(self, data):
         tags = data['tags']
@@ -134,9 +139,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
 
-
 #     def to_representation(self, instance):
 #         return representation(self.context, instance, RecipeSerializer)
 
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = '__all__'
 
 

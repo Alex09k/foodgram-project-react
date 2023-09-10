@@ -2,13 +2,22 @@ from django.shortcuts import render
 from rest_framework import  viewsets
 from recipes.models import (Favourite, Follow, Ingredient, Recipe, ShoppingCart,
                             Tag)
+from users.models import CustomUser
 
-from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer
+from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, CustomUserSerializer, RecipeWriteSerializer
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+
+    def get_serializer_class(self):
+        
+        if self.action == 'list':
+            
+            return RecipeSerializer
+        
+        return RecipeWriteSerializer 
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -38,6 +47,8 @@ class ShoppingCartViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer            
 
 
-
+class CustomUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
 
 
