@@ -39,12 +39,30 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'units', 'amount')
 
 
+class CustomUserSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'is_subscribed')
+        
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return Follow.objects.filter(
+            user=request.user, author=obj
+        ).exists()       
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     
     ingredients = IngredientRecipeSerializer(source='ingredient_intermediate',
                                              many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
+    author = CustomUserSerializer(read_only=True)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
     
    
     
@@ -53,7 +71,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                    'name', 'text',
-                  'cooking_time', "image")
+                  'cooking_time', "image", 'is_favorited')
+        
+    def in_list(self, obj, model):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return model.objects.filter(user=request.user, recipe=obj).exists()
+
+    def get_is_favorited(self, obj):
+        return self.in_list(obj, Favourite)    
 
 
 class AddIngredientSerializer(serializers.ModelSerializer):
@@ -151,20 +178,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         serializer = RecipeSerializer(instance)
         return serializer.data
-
-
-class CustomUserSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
-    class Meta:
-        model = CustomUser
-        fields = ('email', 'id', 'username', 'first_name', 'last_name',
-                  'is_subscribed')
-        
-    def get_is_subscribed(self, object):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Follow.objects.filter(user=user, author=object.id).exists() 
+ 
 
 
 class CustomUserWrightSerializer(UserCreateSerializer):
@@ -186,10 +200,5 @@ class FavoriteSerializer(RecipeListSerializer):
         model = Favourite
         fields = ('user', 'recipe')
 
-    def to_representation(self, instance):
-        return representation(
-            self.context,
-            instance.recipe,
-            RecipeListSerializer)
-
+    
 
