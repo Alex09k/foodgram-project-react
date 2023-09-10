@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 from recipes.models import (Favourite, Follow, Ingredient, Recipe, ShoppingCart, IngredientIntermediate,
                             Tag)
@@ -63,6 +63,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     
    
     
@@ -81,6 +82,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         return self.in_list(obj, Favourite)    
+    
+    def get_is_in_shopping_cart(self, obj):
+        return self.in_list(obj, ShoppingCart)
 
 
 class AddIngredientSerializer(serializers.ModelSerializer):
@@ -99,6 +103,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         many=True,
     )
     image = Base64ImageField()
+    author = CustomUserSerializer(read_only=True)
     
 
     class Meta:
@@ -200,6 +205,18 @@ class FavoriteSerializer(RecipeListSerializer):
         model = Favourite
         fields = ('user', 'recipe')
 
+   
+
+
+
+
+    def to_representation(self, instance):
+        request = self.context['request']
+        return RecipeListSerializer(
+            instance.recipe,
+            context={'request': request}
+        ).data
+
 
 class FollowSerializer(CustomUserSerializer):
     recipes = serializers.SerializerMethodField(read_only=True)
@@ -222,3 +239,21 @@ class FollowSerializer(CustomUserSerializer):
     def get_recipes_count(obj):
         return obj.recipes.count()    
 
+
+class ShoppingCartSerializer(RecipeSerializer):
+    """Сериализатор добавления рецепта в корзину"""
+    name = serializers.ReadOnlyField()
+    cooking_time = serializers.ReadOnlyField()
+
+    class Meta(RecipeSerializer.Meta):
+        fields = ("id", "name", "image", "cooking_time")
+
+    def validate(self, data):
+        recipe = self.instance
+        user = self.context.get('request').user
+        if ShoppingCart.objects.filter(recipe=recipe, user=user).exists():
+            raise serializers.ValidationError(
+                detail='Рецепт уже добавлен в корзину',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data
