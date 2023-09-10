@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'API.apps.ApiConfig',
     'users.apps.UsersConfig',
+    'rest_framework.authtoken',
+    'djoser',
 
 ]
 
@@ -112,7 +114,26 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'SEND_ACTIVATION_EMAIL': False,
+    # 'SERIALIZERS': {
+    #     'user': 'api.serializers.CustomUserSerializer',
+    #     'user_create': 'api.serializers.CustomUserCreateSerializer',
+    #     'current_user': 'api.serializers.CustomUserSerializer',
+    # },
+    # 'PERMISSIONS': {
+    #     'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+    #     'user_list': ['rest_framework.permissions.AllowAny'],
+    # },
+}
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 

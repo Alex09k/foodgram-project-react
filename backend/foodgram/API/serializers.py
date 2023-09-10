@@ -6,6 +6,7 @@ from django.db import transaction
 from rest_framework.fields import IntegerField, SerializerMethodField
 
 from users.models import CustomUser
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -44,6 +45,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                                              many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
+    
    
     
 
@@ -59,7 +61,7 @@ class AddIngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientIntermediate
-        fields = ('id',)
+        fields = ('id', 'amount')
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -137,15 +139,57 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         self.add_tags(tags, recipe)
         self.add_ingredients(ingredients, recipe)
         return recipe
+    
+    @transaction.atomic
+    def update(self, recipe, validated_data):
+        recipe.tags.clear()
+        IngredientIntermediate.objects.filter(recipe=recipe).delete()
+        self.add_tags(validated_data.pop('tags'), recipe)
+        self.add_ingredients(validated_data.pop('ingredients'), recipe)
+        return super().update(recipe, validated_data)
 
-
-#     def to_representation(self, instance):
-#         return representation(self.context, instance, RecipeSerializer)
+    def to_representation(self, instance):
+        serializer = RecipeSerializer(instance)
+        return serializer.data
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = CustomUser
-        fields = '__all__'
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'is_subscribed')
+        
+    def get_is_subscribed(self, object):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Follow.objects.filter(user=user, author=object.id).exists() 
+
+
+class CustomUserWrightSerializer(UserCreateSerializer):
+        class Meta:
+            model = CustomUser
+            fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'password')
+            
+        @transaction.atomic
+        def create(self, validated_data):
+            user = super(CustomUserWrightSerializer, self).create(validated_data)
+            user.set_password(validated_data['password'])
+            user.save()
+            return user    
+
+
+class FavoriteSerializer(RecipeListSerializer):
+    class Meta:
+        model = Favourite
+        fields = ('user', 'recipe')
+
+    def to_representation(self, instance):
+        return representation(
+            self.context,
+            instance.recipe,
+            RecipeListSerializer)
 
 
