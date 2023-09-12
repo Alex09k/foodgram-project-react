@@ -4,7 +4,7 @@ from recipes.models import (Favourite, Follow, Ingredient, Recipe, ShoppingCart,
                             Tag)
 from users.models import CustomUser
 
-from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, CustomUserSerializer, RecipeWriteSerializer, FollowSerializer
+from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, CustomUserSerializer, RecipeWriteSerializer, FollowSerializer, FavoriteSerializer, ShoppingCartSerializer
 from rest_framework.response import Response
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -13,7 +13,7 @@ from rest_framework.decorators import action
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    
 
     def get_serializer_class(self):
         
@@ -23,20 +23,45 @@ class RecipeViewSet(viewsets.ModelViewSet):
         
         return RecipeWriteSerializer 
     
-    
-    def create_object(request, id, serializers):
+    @staticmethod
+    def create_recipe(request, id, serializers):
         data = {'user': request.user.id, 'recipe': id}
         serializer = serializers(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    def delete_recipe(self, model, request, pk):
-        recipe = get_object_or_404(Recipe, pk=pk)
+    @staticmethod
+    def delete_recipe(self, model, request, id):
+        recipe = get_object_or_404(Recipe, id=id)
         user = self.request.user
         obj = get_object_or_404(model, recipe=recipe, user=user)
         obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    def _create_or_destroy(self, http_method, recipe, key,
+                           model, serializer):
+        if http_method == 'POST':
+            return self.create_object(request=recipe, id=key,
+                                      serializers=serializer)
+        return self.delete_object(request=recipe, id=key, model=model)
+    
+    
+    def favorite(self, request, id):
+        return self._create_or_destroy(
+            request.method, request, id, Favourite, FavoriteSerializer
+        )
+
+    @action(
+        detail=True,
+        methods=('post', 'delete'),
+        
+    )
+    def shopping_cart(self, request, id):
+        return self._create_or_destroy(
+            request.method, request, id, ShoppingCart, ShoppingCartSerializer
+        )
+
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -45,15 +70,10 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
-class FavouriteViewSet(viewsets.ModelViewSet):
-    queryset = Favourite.objects.all()
-    serializer_class = RecipeSerializer    
+   
 
 
 
-class FollowViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -61,53 +81,53 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
 
 
-class ShoppingCartViewSet(viewsets.ModelViewSet):
-    queryset = ShoppingCart.objects.all()
-    serializer_class = RecipeSerializer            
+           
 
 
 class CustomUserViewSet(UserViewSet):
-        
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
 
-    @action(detail=True,
-        methods=['post', 'delete'],
-       
-    )
-    def subscribe(self, request, **kwargs):
+    @action(detail=False, url_path='subscriptions',
+            url_name='subscriptions')
+    def subscriptions(self, request):
+        """Список авторов, на которых подписан пользователь."""
         user = request.user
-        author_id = self.kwargs.get('id')
-        author = get_object_or_404(CustomUser, id=author_id)
-
+        queryset = user.follower.all()
+        pages = self.paginate_queryset(queryset)
+        serializer = FollowSerializer(
+            pages, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
+    
+    
+    @action(methods=['post', 'delete'], detail=True, url_path='subscribe',
+            url_name='subscribe')
+    def subscribe(self, request, id=None):
+        """Подписка на автора."""
+        user = request.user
+        author = get_object_or_404(CustomUser, id=id)
+        if user == author:
+            return Response(
+                {'errors': 'На себя нельзя подписаться / отписаться'},
+                status=status.HTTP_400_BAD_REQUEST)
+        subscription = Follow.objects.filter(
+            author=author, user=user)
         if request.method == 'POST':
-            serializer = FollowSerializer(author,
-                                             data=request.data,
-                                             context={"request": request})
-            serializer.is_valid(raise_exception=True)
-            Follow.objects.create(user=user, author=author)
+            if subscription.exists():
+                return Response(
+                    {'errors': 'Нельзя подписаться повторно'},
+                    status=status.HTTP_400_BAD_REQUEST)
+            queryset = Follow.objects.create(author=author, user=user)
+            serializer = FollowSerializer(
+                queryset, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         if request.method == 'DELETE':
-            subscription = get_object_or_404(Follow,
-                                             user=user,
-                                             author=author)
+            if not subscription.exists():
+                return Response(
+                    {'errors': 'Нельзя отписаться повторно'},
+                    status=status.HTTP_400_BAD_REQUEST)
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(
-        detail=False,
-        
-    )
-    def subscriptions(self, request):
-        user = request.user
-        queryset = CustomUser.objects.filter(subscribing__user=user)
-        pages = self.paginate_queryset(queryset)
-        serializer = FollowSerializer(pages,
-                                         many=True,
-                                         context={'request': request})
-        return self.get_paginated_response(serializer.data)
-
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 

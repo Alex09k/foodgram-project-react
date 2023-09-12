@@ -72,7 +72,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                    'name', 'text',
-                  'cooking_time', "image", 'is_favorited')
+                  'cooking_time', "image", 'is_favorited', 'is_in_shopping_cart')
         
     def in_list(self, obj, model):
         request = self.context.get('request')
