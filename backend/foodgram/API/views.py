@@ -13,11 +13,13 @@ from rest_framework.decorators import action
 from .permissions import IsAuthorAdminOrReadOnly
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+from .paginators import RecipePagination
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorAdminOrReadOnly,)
+    pagination_class = RecipePagination
 
     def get_serializer_class(self):
         
@@ -77,6 +79,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 
@@ -90,6 +93,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
+    pagination_class = None
 
 
            
