@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'django_filters',
+    'django_extensions'
 
 ]
 
@@ -126,20 +127,23 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 6,
+    'DEFAULT_FILTER_BACKENDS': [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
 }
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'SEND_ACTIVATION_EMAIL': False,
-    # 'SERIALIZERS': {
-    #     'user': 'api.serializers.CustomUserSerializer',
-    #     'user_create': 'api.serializers.CustomUserCreateSerializer',
-    #     'current_user': 'api.serializers.CustomUserSerializer',
-    # },
-    # 'PERMISSIONS': {
-    #     'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
-    #     'user_list': ['rest_framework.permissions.AllowAny'],
-    # },
+    'SERIALIZERS': {
+        'user': 'API.serializers.CustomUserSerializer',
+        'user_create': 'API.serializers.CustomUserWrightSerializer',
+        'current_user': 'API.serializers.CustomUserSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    },
 }
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
