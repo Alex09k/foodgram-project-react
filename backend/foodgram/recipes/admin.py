@@ -14,7 +14,7 @@ class IngredientRecipeInline(admin.TabularInline):
 
 class IngredientAdmin(admin.ModelAdmin):
     """в понели администратора модель Ингридиен."""
-    list_display = ('id', 'name', 'units')
+    list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('name',)
     inlines = (IngredientRecipeInline,)
@@ -88,4 +88,6 @@ admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Favourite, FavouriteAdmin)
 admin.site.register(Follow, FollowAdmin)
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
+
+
 

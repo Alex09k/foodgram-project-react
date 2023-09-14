@@ -12,7 +12,7 @@ from drf_extra_fields.fields import Base64ImageField
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ('id',"name", "units")
+        fields = ('id',"name", "measurement_unit")
 
 
 
@@ -30,13 +30,13 @@ class RecipeListSerializer(serializers.ModelSerializer):
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
-    units = serializers.ReadOnlyField(
-        source='ingredient.units'
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
     )
 
     class Meta:
         model = IngredientIntermediate
-        fields = ('id', 'name', 'units', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class CustomUserSerializer(UserSerializer):
@@ -164,12 +164,14 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        author = self.context.get('request').user
         
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(author=author, **validated_data)
         self.add_tags(tags, recipe)
         self.add_ingredients(ingredients, recipe)
+        
         return recipe
     
     @transaction.atomic
@@ -257,3 +259,7 @@ class ShoppingCartSerializer(RecipeSerializer):
                 code=status.HTTP_400_BAD_REQUEST,
             )
         return data
+
+
+
+

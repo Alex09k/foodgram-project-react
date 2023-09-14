@@ -5,13 +5,12 @@ from django.db.models.deletion import CASCADE
 from colorfield.fields import ColorField
 from django.core.validators import MinValueValidator
 
-
-User = get_user_model()
+from users.models import CustomUser
 
 
 class Recipe(models.Model):
     """Модель рецепта"""
-    author = models.ForeignKey(User, on_delete=CASCADE, related_name = 'recipes',
+    author = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name = 'recipes',
                                verbose_name='Автор')
 
     name = models.CharField(max_length=100,
@@ -57,7 +56,7 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Модель ингридиентов"""
     name = models.CharField(max_length=100, verbose_name='Ингридиент')
-    units = models.CharField(max_length=200,
+    measurement_unit = models.CharField(max_length=200,
                             verbose_name='Единица измерения')
     
 
@@ -84,7 +83,7 @@ class IngredientIntermediate(models.Model):
 
     def __str__(self):
         return (
-            f'{self.ingredient.name} ({self.ingredient.units}) - {self.amount} '
+            f'{self.ingredient.name} ({self.ingredient.measurement_unit}) - {self.amount} '
         )
     
     class Meta:
@@ -99,11 +98,11 @@ class IngredientIntermediate(models.Model):
 
 
 class Follow(models.Model):
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(CustomUser,
                              on_delete=CASCADE,
                              related_name='follower',
                              verbose_name='Пользователь')
-    author = models.ForeignKey(User, on_delete=CASCADE,
+    author = models.ForeignKey(CustomUser, on_delete=CASCADE,
                                related_name='following',
                                verbose_name='Автор')
     
@@ -120,7 +119,7 @@ class Follow(models.Model):
 class Favourite(models.Model):
     """Модель избранное."""
 
-    user = models.ForeignKey(User, on_delete=CASCADE,
+    user = models.ForeignKey(CustomUser, on_delete=CASCADE,
                              related_name='favourites',
                              verbose_name='Пользователь')
     recipe = models.ForeignKey(Recipe, on_delete=CASCADE,
@@ -141,7 +140,7 @@ class Favourite(models.Model):
 class ShoppingCart(models.Model):
     """Модель корзины."""
     user = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
         related_name='shopping_cart',
@@ -158,6 +157,7 @@ class ShoppingCart(models.Model):
         verbose_name_plural = 'Покупки'
         
     
+
 
 
 
