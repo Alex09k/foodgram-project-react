@@ -10,10 +10,14 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework.decorators import action
+from .permissions import IsAuthorAdminOrReadOnly
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    
+    permission_classes = (IsAuthorAdminOrReadOnly,)
 
     def get_serializer_class(self):
         
@@ -46,7 +50,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                       serializers=serializer)
         return self.delete_object(request=recipe, id=key, model=model)
     
-    
+    @action(
+        detail=True,
+        methods=('post', 'delete'),
+        permission_classes=(IsAuthenticated,),
+    )
     def favorite(self, request, id):
         return self._create_or_destroy(
             request.method, request, id, Favourite, FavoriteSerializer
@@ -55,6 +63,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
+        permission_classes=(IsAuthenticated,),
         
     )
     def shopping_cart(self, request, id):
@@ -67,6 +76,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = (AllowAny,)
 
 
 
@@ -79,6 +89,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    permission_classes = (AllowAny,)
 
 
            
@@ -86,9 +97,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class CustomUserViewSet(UserViewSet):
     queryset = CustomUser.objects.all()
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = CustomUserSerializer
 
-    @action(detail=False, url_path='subscriptions',
-            url_name='subscriptions')
+    @action(detail=False, permission_classes=(IsAuthenticated, ))
     def subscriptions(self, request):
         """Список авторов, на которых подписан пользователь."""
         user = request.user
@@ -99,8 +111,7 @@ class CustomUserViewSet(UserViewSet):
         return self.get_paginated_response(serializer.data)
     
     
-    @action(methods=['post', 'delete'], detail=True, url_path='subscribe',
-            url_name='subscribe')
+    @action(methods=['post', 'delete'], detail=True, permission_classes=(IsAuthenticated,))
     def subscribe(self, request, id=None):
         """Подписка на автора."""
         user = request.user
