@@ -14,12 +14,15 @@ from .permissions import IsAuthorAdminOrReadOnly
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from .paginators import RecipePagination
+from .filters import IngredientFilter, RecipeFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorAdminOrReadOnly,)
     pagination_class = RecipePagination
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         
@@ -94,6 +97,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     pagination_class = None
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
            
