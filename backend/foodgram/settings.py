@@ -104,7 +104,12 @@ DATABASES = {
     }
 
 }
-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': str(os.path.join(BASE_DIR, "db.sqlite3"))
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -124,20 +129,50 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-REST_FRAMEWORK = {
+# REST_FRAMEWORK = {
     
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.TokenAuthentication',
+#     ],
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+#     ],
+#     'DEFAULT_PAGINATION_CLASS':
+#         'rest_framework.pagination.PageNumberPagination',
+#     'PAGE_SIZE': 6,
+#     'DEFAULT_FILTER_BACKENDS': [
+#         "django_filters.rest_framework.DjangoFilterBackend",
+#     ],
+# }
+
+# DJOSER = {
+#     'LOGIN_FIELD': 'email',
+#     'SEND_ACTIVATION_EMAIL': False,
+#     'SERIALIZERS': {
+#         'user': 'API.serializers.CustomUserSerializer',
+#         'user_create': 'API.serializers.CustomUserWrightSerializer',
+#         'current_user': 'API.serializers.CustomUserSerializer',
+#     },
+#     'PERMISSIONS': {
+#         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+#         'user_list': ['rest_framework.permissions.AllowAny'],
+#     },
+# }
+# Internationalization
+# https://docs.djangoproject.com/en/4.1/topics/i18n/
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    'DEFAULT_FILTER_BACKENDS': [
+        "django_filters.rest_framework.DjangoFilterBackend",
     ],
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 6,
-    'DEFAULT_FILTER_BACKENDS': [
-        "django_filters.rest_framework.DjangoFilterBackend",
-    ],
 }
 
 DJOSER = {
@@ -145,7 +180,7 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': False,
     'SERIALIZERS': {
         'user': 'API.serializers.CustomUserSerializer',
-        'user_create': 'API.serializers.CustomUserWrightSerializer',
+        'user_create': 'API.serializers.CustomUserCreateSerializer',
         'current_user': 'API.serializers.CustomUserSerializer',
     },
     'PERMISSIONS': {
@@ -153,9 +188,6 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.AllowAny'],
     },
 }
-# Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
-
 
 TIME_ZONE = 'UTC'
 

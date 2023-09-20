@@ -39,20 +39,48 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+# class CustomUserSerializer(UserSerializer):
+#     is_subscribed = serializers.SerializerMethodField(read_only=True)
+#     class Meta:
+#         model = CustomUser
+#         fields = ('email', 'id', 'username', 'first_name', 'last_name',
+#                   'is_subscribed')
+        
+#     def get_is_subscribed(self, obj):
+#         request = self.context.get('request')
+#         if request is None or request.user.is_anonymous:
+#             return False
+#         return Follow.objects.filter(
+#             user=request.user, author=obj
+#         ).exists()       
+
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed')
-        
+
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
+        user = self.context.get('request').user
+        if user.is_anonymous:
             return False
-        return Follow.objects.filter(
-            user=request.user, author=obj
-        ).exists()       
+        return Follow.objects.filter(user=user, author=obj.id).exists()
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'password')
+
+    @transaction.atomic
+    def create(self, validated_data):
+        user = super(CustomUserCreateSerializer, self).create(validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -188,18 +216,18 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
  
 
 
-class CustomUserWrightSerializer(UserCreateSerializer):
-        class Meta:
-            model = CustomUser
-            fields = ('email', 'id', 'username', 'first_name', 'last_name',
-                  'password')
+# class CustomUserWrightSerializer(UserCreateSerializer):
+#         class Meta:
+#             model = CustomUser
+#             fields = ('email', 'id', 'username', 'first_name', 'last_name',
+#                   'password')
             
-        @transaction.atomic
-        def create(self, validated_data):
-            user = super(CustomUserWrightSerializer, self).create(validated_data)
-            user.set_password(validated_data['password'])
-            user.save()
-            return user    
+#         @transaction.atomic
+#         def create(self, validated_data):
+#             user = super(CustomUserWrightSerializer, self).create(validated_data)
+#             user.set_password(validated_data['password'])
+#             user.save()
+#             return user    
 
 
 class FavoriteSerializer(RecipeListSerializer):
