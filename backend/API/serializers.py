@@ -39,34 +39,22 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
-# class CustomUserSerializer(UserSerializer):
-#     is_subscribed = serializers.SerializerMethodField(read_only=True)
-#     class Meta:
-#         model = CustomUser
-#         fields = ('email', 'id', 'username', 'first_name', 'last_name',
-#                   'is_subscribed')
-        
-#     def get_is_subscribed(self, obj):
-#         request = self.context.get('request')
-#         if request is None or request.user.is_anonymous:
-#             return False
-#         return Follow.objects.filter(
-#             user=request.user, author=obj
-#         ).exists()       
-
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
-
     class Meta:
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed')
-
+        
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
             return False
-        return Follow.objects.filter(user=user, author=obj.id).exists()
+        return Follow.objects.filter(
+            user=request.user, author=obj
+        ).exists()       
+
+
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -211,23 +199,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return super().update(recipe, validated_data)
 
     def to_representation(self, instance):
-        serializer = RecipeSerializer(instance)
-        return serializer.data
+        return representation(self.context, instance, RecipeSerializer)
  
 
 
-# class CustomUserWrightSerializer(UserCreateSerializer):
-#         class Meta:
-#             model = CustomUser
-#             fields = ('email', 'id', 'username', 'first_name', 'last_name',
-#                   'password')
-            
-#         @transaction.atomic
-#         def create(self, validated_data):
-#             user = super(CustomUserWrightSerializer, self).create(validated_data)
-#             user.set_password(validated_data['password'])
-#             user.save()
-#             return user    
+  
 
 
 class FavoriteSerializer(RecipeListSerializer):
@@ -235,17 +211,12 @@ class FavoriteSerializer(RecipeListSerializer):
         model = Favourite
         fields = ('user', 'recipe')
 
-   
-
-
-
-
     def to_representation(self, instance):
-        request = self.context['request']
-        return RecipeListSerializer(
+        return representation(
+            self.context,
             instance.recipe,
-            context={'request': request}
-        ).data
+            RecipeListSerializer)
+
 
 
 class FollowSerializer(CustomUserSerializer):

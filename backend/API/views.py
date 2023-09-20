@@ -109,46 +109,54 @@ class CustomUserViewSet(UserViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = CustomUserSerializer
 
-    @action(detail=False, permission_classes=(IsAuthenticated, ))
+    @action(
+        detail=False,
+        permission_classes=(IsAuthenticated, )
+    )
     def subscriptions(self, request):
-        """Список авторов, на которых подписан пользователь."""
-        user = request.user
-        queryset = user.follower.all()
-        pages = self.paginate_queryset(queryset)
-        serializer = FollowSerializer(
-            pages, many=True, context={'request': request})
-        return self.get_paginated_response(serializer.data)
-    
-    
-    @action(methods=['post', 'delete'], detail=True, permission_classes=(IsAuthenticated,))
-    def subscribe(self, request, id=None):
-        """Подписка на автора."""
+        queryset = CustomUser.objects.filter(followed__user=request.user)
+        if queryset:
+            pages = self.paginate_queryset(queryset)
+            serializer = FollowSerializer(pages, many=True,
+                                          context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response('У Вас нет подписок.',
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=True,
+        methods=('post',),
+        permission_classes=(IsAuthenticated,)
+    )
+    def subscribe(self, request, id):
         user = request.user
         author = get_object_or_404(CustomUser, id=id)
-        if user == author:
-            return Response(
-                {'errors': 'На себя нельзя подписаться / отписаться'},
-                status=status.HTTP_400_BAD_REQUEST)
         subscription = Follow.objects.filter(
-            author=author, user=user)
-        if request.method == 'POST':
-            if subscription.exists():
-                return Response(
-                    {'errors': 'Нельзя подписаться повторно'},
-                    status=status.HTTP_400_BAD_REQUEST)
-            queryset = Follow.objects.create(author=author, user=user)
-            serializer = FollowSerializer(
-                queryset, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if not subscription.exists():
-                return Response(
-                    {'errors': 'Нельзя отписаться повторно'},
-                    status=status.HTTP_400_BAD_REQUEST)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            user=user.id, author=author.id
+        )
+        if user == author:
+            return Response('На себя подписываться нельзя!',
+                            status=status.HTTP_400_BAD_REQUEST)
+        if subscription.exists():
+            return Response(f'Вы уже подписаны на {author}',
+                            status=status.HTTP_400_BAD_REQUEST)
+        subscribe = Follow.objects.create(
+            user=user,
+            author=author
+        )
+        subscribe.save()
+        return Response(f'Вы подписались на {author}',
+                        status=status.HTTP_201_CREATED)
 
-
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, id):
+        user = request.user
+        author = get_object_or_404(CustomUser, id=id)
+        change_subscription = Follow.objects.filter(
+            user=user.id, author=author.id
+        )
+        change_subscription.delete()
+        return Response(f'Вы больше не подписаны на {author}',
+                        status=status.HTTP_204_NO_CONTENT)
 
 
