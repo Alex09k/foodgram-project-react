@@ -4,13 +4,23 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     """модель пользователя"""
-    first_name = models.CharField(max_length=50,
-                                  verbose_name='Имя')
-    last_name = models.CharField(max_length=50,
-                                  verbose_name='Фамилия')
-    email = models.EmailField(max_length=100,
-                              unique=True,
-                              verbose_name='email')
+    first_name = models.CharField(
+        max_length=150,
+        verbose_name='Имя',
+        help_text='Укажите имя'
+    )
+    last_name = models.CharField(
+        max_length=150,
+        verbose_name='Фамилия',
+        help_text='Укажите фамилию'
+    )
+    email = models.EmailField(
+        max_length=254,
+        unique=True,
+        verbose_name='email',
+        help_text='Укажите email'
+    )
+    
     
 
     USERNAME_FIELD = 'email'

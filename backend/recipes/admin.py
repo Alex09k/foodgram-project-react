@@ -1,13 +1,13 @@
 from django.contrib import admin
 
-from .models import (Ingredient, Tag, Recipe, IngredientIntermediate,
-                     Favourite, Follow,
+from .models import (Ingredient, Tag, Recipe, IngredientRecipe,
+                     Favorite, Follow,
                      ShoppingCart)
 
 
 class IngredientRecipeInline(admin.TabularInline):
     """в понели администратора модель IngredientIntermediate."""
-    model = IngredientIntermediate
+    model = IngredientRecipe
 
 
 
@@ -41,7 +41,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return "\n".join([i[0] for i in obj.ingredients.values_list('name')])
     
     def is_favourited(self, obj):
-        return Favourite.objects.filter(recipe=obj).count()
+        return Favorite.objects.filter(recipe=obj).count()
     
     @staticmethod
     def amount_favourite(obj):
@@ -53,7 +53,7 @@ class RecipeAdmin(admin.ModelAdmin):
     
 
 
-class FavouriteAdmin(admin.ModelAdmin):
+class FavoriteAdmin(admin.ModelAdmin):
     """в понели администратора модель Favourite."""
     list_display = ('id', 'user', 'recipe')
     search_fields = ('user',)
@@ -85,7 +85,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Favourite, FavouriteAdmin)
+admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(Follow, FollowAdmin)
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
 

@@ -1,6 +1,6 @@
 from rest_framework import serializers, status
 
-from recipes.models import (Favourite, Follow, Ingredient, Recipe, ShoppingCart, IngredientIntermediate,
+from recipes.models import (Favorite, Follow, Ingredient, Recipe, ShoppingCart, IngredientRecipe,
                             Tag)
 from django.db import transaction
 from rest_framework.fields import IntegerField, SerializerMethodField
@@ -35,26 +35,23 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = IngredientIntermediate
+        model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed')
-        
+
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
+        user = self.context.get('request').user
+        if user.is_anonymous:
             return False
-        return Follow.objects.filter(
-            user=request.user, author=obj
-        ).exists()       
-
-
+        return Follow.objects.filter(user=user, author=obj.id).exists()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -70,10 +67,9 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         user.save()
         return user
 
-
 class RecipeSerializer(serializers.ModelSerializer):
     
-    ingredients = IngredientRecipeSerializer(source='ingredient_intermediate',
+    ingredients = IngredientRecipeSerializer(source='ingredient_recipe',
                                              many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
@@ -90,28 +86,35 @@ class RecipeSerializer(serializers.ModelSerializer):
                    'name', 'text',
                   'cooking_time', "image", 'is_favorited', 'is_in_shopping_cart')
         
-    def in_list(self, obj, model):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return model.objects.filter(user=request.user, recipe=obj).exists()
-
     def get_is_favorited(self, obj):
-        return self.in_list(obj, Favourite)    
-    
+        return self._obj_exists(obj, Favorite)
+
     def get_is_in_shopping_cart(self, obj):
-        return self.in_list(obj, ShoppingCart)
+        return self._obj_exists(obj, ShoppingCart)
+
+    def _obj_exists(self, recipe, name_class):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return name_class.objects.filter(user=request.user,
+                                         recipe=recipe).exists()
+
 
 
 class AddIngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
 
     class Meta:
-        model = IngredientIntermediate
+        model = IngredientRecipe
         fields = ('id', 'amount')
 
+def representation(context, instance, serializer):
+    request = context.get('request')
+    new_context = {'request': request}
+    return serializer(instance, context=new_context).data
 
-class RecipeWriteSerializer(serializers.ModelSerializer):
+
+class RecipeCreateSerializer(serializers.ModelSerializer):
     
     ingredients = AddIngredientSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
@@ -167,12 +170,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return data
 
     def add_ingredients(self, ingredients, recipe):
-        new_ingredients = [IngredientIntermediate(
+        new_ingredients = [IngredientRecipe(
             recipe=recipe,
             ingredient=ingredient['id'],
             amount=ingredient['amount'],
         ) for ingredient in ingredients]
-        IngredientIntermediate.objects.bulk_create(new_ingredients)
+        IngredientRecipe.objects.bulk_create(new_ingredients)
 
     def add_tags(self, tags, recipe):
         for tag in tags:
@@ -193,7 +196,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, recipe, validated_data):
         recipe.tags.clear()
-        IngredientIntermediate.objects.filter(recipe=recipe).delete()
+        IngredientRecipe.objects.filter(recipe=recipe).delete()
         self.add_tags(validated_data.pop('tags'), recipe)
         self.add_ingredients(validated_data.pop('ingredients'), recipe)
         return super().update(recipe, validated_data)
@@ -208,7 +211,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(RecipeListSerializer):
     class Meta:
-        model = Favourite
+        model = Favorite
         fields = ('user', 'recipe')
 
     def to_representation(self, instance):
@@ -241,24 +244,13 @@ class FollowSerializer(CustomUserSerializer):
         return obj.recipes.count()    
 
 
-class ShoppingCartSerializer(RecipeSerializer):
-    """Сериализатор добавления рецепта в корзину"""
-    name = serializers.ReadOnlyField()
-    cooking_time = serializers.ReadOnlyField()
+class ShoppingCartSerializer(RecipeListSerializer):
+    class Meta:
+        model = ShoppingCart
+        fields = ('user', 'recipe')
 
-    class Meta(RecipeSerializer.Meta):
-        fields = ("id", "name", "image", "cooking_time")
-
-    def validate(self, data):
-        recipe = self.instance
-        user = self.context.get('request').user
-        if ShoppingCart.objects.filter(recipe=recipe, user=user).exists():
-            raise serializers.ValidationError(
-                detail='Рецепт уже добавлен в корзину',
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        return data
-
-
-
-
+    def to_representation(self, instance):
+        return representation(
+            self.context,
+            instance.recipe,
+            RecipeListSerializer)
