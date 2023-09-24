@@ -10,15 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv(
     'SECRET_KEY', default='secretkey')
 
-
-DEBUG = False
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['84.201.143.238', '127.0.0.1', 'localhost', 'nsknsk.ddnsking.com']
 
 CSRF_TRUSTED_ORIGINS = ['https://*.nsknsk.ddnsking.com']
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -38,7 +34,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'drf_yasg',
     
-
 ]
 
 MIDDLEWARE = [
@@ -49,6 +44,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'foodgram.urls'
@@ -71,14 +67,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        # Меняем настройку Django: теперь для работы будет использоваться
-        # бэкенд postgresql
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'foodgram'),
         'USER': os.getenv('POSTGRES_USER', 'foodgram'),
@@ -88,15 +78,7 @@ DATABASES = {
     }
 
 }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': str(os.path.join(BASE_DIR, "db.sqlite3"))
-#     }
-# }
 
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -113,37 +95,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# REST_FRAMEWORK = {
-    
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework.authentication.TokenAuthentication',
-#     ],
-#     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-#     ],
-#     'DEFAULT_PAGINATION_CLASS':
-#         'rest_framework.pagination.PageNumberPagination',
-#     'PAGE_SIZE': 6,
-#     'DEFAULT_FILTER_BACKENDS': [
-#         "django_filters.rest_framework.DjangoFilterBackend",
-#     ],
-# }
 
-# DJOSER = {
-#     'LOGIN_FIELD': 'email',
-#     'SEND_ACTIVATION_EMAIL': False,
-#     'SERIALIZERS': {
-#         'user': 'API.serializers.CustomUserSerializer',
-#         'user_create': 'API.serializers.CustomUserWrightSerializer',
-#         'current_user': 'API.serializers.CustomUserSerializer',
-#     },
-#     'PERMISSIONS': {
-#         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
-#         'user_list': ['rest_framework.permissions.AllowAny'],
-#     },
-# }
-# Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -182,15 +134,12 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
 STATIC_URL = '/static/'
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-
 MEDIA_URL = '/media/'
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -198,4 +147,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
