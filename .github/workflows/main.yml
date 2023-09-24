@@ -1,4 +1,4 @@
-name: Main Foodfram Workflow
+name: Main FoodframS Workflow
 # Перечень событий-триггеров, при которых должен запускаться workflow
 on:
   # Событие push возникает,
