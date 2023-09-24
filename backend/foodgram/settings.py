@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'colorfield',
     'rest_framework',
-    'api.apps.ApiConfig',
+    'API.apps.ApiConfig',
     'users.apps.UsersConfig',
     'rest_framework.authtoken',
     'djoser',
@@ -115,9 +115,9 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': False,
     'HIDE_USERS': False,
     'SERIALIZERS': {
-        'user': 'api.serializers.CustomUserSerializer',
-        'user_create': 'api.serializers.CustomUserCreateSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
+        'user': 'API.serializers.CustomUserSerializer',
+        'user_create': 'API.serializers.CustomUserCreateSerializer',
+        'current_user': 'API.serializers.CustomUserSerializer',
     },
     'PERMISSIONS': {
         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
