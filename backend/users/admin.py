@@ -9,4 +9,5 @@ class CustomUserAdmin(admin.ModelAdmin):
     list_filter = ("email", "username")
     empty_value_display = "-пусто-"
 
+
 admin.site.register(CustomUser, CustomUserAdmin)

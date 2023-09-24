@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser):
-    """модель пользователя"""
+    """модель пользователя."""
     first_name = models.CharField(
         max_length=150,
         verbose_name='Имя',
@@ -20,8 +20,6 @@ class CustomUser(AbstractUser):
         verbose_name='email',
         help_text='Укажите email'
     )
-    
-    
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
@@ -33,5 +31,3 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
-
-

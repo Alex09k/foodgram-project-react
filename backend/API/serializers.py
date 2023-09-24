@@ -3,9 +3,11 @@ from recipes.models import (Favorite, Follow,
                             Ingredient, Recipe, ShoppingCart,
                             IngredientRecipe, Tag)
 from django.db import transaction
-from users.models import CustomUser
+
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
+
+from users.models import CustomUser
 
 
 class IngredientSerializer(serializers.ModelSerializer):

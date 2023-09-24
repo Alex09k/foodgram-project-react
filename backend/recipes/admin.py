@@ -10,10 +10,8 @@ class IngredientRecipeInline(admin.TabularInline):
     model = IngredientRecipe
 
 
-
-
 class IngredientAdmin(admin.ModelAdmin):
-    """в понели администратора модель Ингридиен."""
+    """в понели администратора модель Ингридиены."""
     list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('name',)
@@ -34,15 +32,15 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'author')
     search_fields = ('author', 'name', 'tags')
     inlines = (IngredientRecipeInline,)
-    empty_value_display = '-пусто-' 
+    empty_value_display = '-пусто-'
 
     @staticmethod
     def amount_ingredients(obj):
         return "\n".join([i[0] for i in obj.ingredients.values_list('name')])
-    
+
     def is_favourited(self, obj):
         return Favorite.objects.filter(recipe=obj).count()
-    
+
     @staticmethod
     def amount_favourite(obj):
         return obj.favourites.count()
@@ -50,7 +48,6 @@ class RecipeAdmin(admin.ModelAdmin):
     @staticmethod
     def amount_tags(obj):
         return "\n".join([i[0] for i in obj.tags.values_list('name')])
-    
 
 
 class FavoriteAdmin(admin.ModelAdmin):
@@ -77,17 +74,9 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-
-    
-
-
-
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(Follow, FollowAdmin)
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
-
-
-
