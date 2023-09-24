@@ -11,9 +11,11 @@ SECRET_KEY = os.getenv(
     'SECRET_KEY', default='secretkey')
 
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['84.201.143.238', '127.0.0.1', 'localhost', 'nsknsk.ddnsking.com']
+
+CSRF_TRUSTED_ORIGINS = ['https://*.nsknsk.ddnsking.com']
 
 
 # Application definition
