@@ -5,6 +5,10 @@ from django.db.models import DateTimeField
 from colorfield.fields import ColorField
 from django.core.validators import MinValueValidator
 
+from foodgram.constants import NUMBER_SYMBOLS, NUMBER_SYMBOL_FOR_COLORS
+
+from rest_framework.exceptions import ValidationError
+
 from users.models import CustomUser
 
 
@@ -14,7 +18,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(CustomUser, on_delete=CASCADE,
                                related_name='recipes',
                                verbose_name='Автор')
-    name = models.CharField(max_length=100,
+    name = models.CharField(max_length=NUMBER_SYMBOLS,
                             unique=True,
                             verbose_name='Название рецепта',
                             help_text='Введите название рецепта',)
@@ -31,7 +35,11 @@ class Recipe(models.Model):
                                          help_text='Перечислите ингредиенты',)
     tags = models.ManyToManyField('Tag', related_name='recipes',
                                   verbose_name='Теги')
-    cooking_time = models.IntegerField(verbose_name='Время приготовления')
+    cooking_time = models.IntegerField(validators=[MinValueValidator(
+        1, 'Количество должно превышать 0',
+    )],
+        verbose_name='Время приготовления',
+        help_text='Укажите время приготовления',)
     pub_date = DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True,)
@@ -48,13 +56,13 @@ class Recipe(models.Model):
 class Tag(models.Model):
     """Модель тега."""
 
-    name = models.CharField(max_length=30,
+    name = models.CharField(max_length=NUMBER_SYMBOLS,
                             unique=True,
                             verbose_name='Тег')
-    color = ColorField(max_length=7,
+    color = ColorField(max_length=NUMBER_SYMBOL_FOR_COLORS,
                        unique=True,
                        verbose_name='Цвет тега',)
-    slug = models.SlugField(max_length=100, unique=True,
+    slug = models.SlugField(max_length=NUMBER_SYMBOLS, unique=True,
                             verbose_name='Слаг тега')
 
     def __str__(self):
@@ -64,21 +72,27 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Модель ингридиентов."""
 
-    name = models.CharField(max_length=100, verbose_name='Ингридиент',
+    name = models.CharField(max_length=NUMBER_SYMBOLS, verbose_name='Ингридиент',
                             help_text='Введите ингредиент',
                             )
-    measurement_unit = models.CharField(max_length=200,
+    measurement_unit = models.CharField(max_length=NUMBER_SYMBOLS,
                                         verbose_name='Единица измерения',
                                         help_text='Введите единицу измерения',
                                         )
-
-    def __str__(self):
-        return self.name
-
+    
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit',),
+                name='unique_name_measurement_unit',
+            ),
+        )
+
+    def __str__(self):
+        return self.name
 
 
 class IngredientRecipe(models.Model):
@@ -129,7 +143,14 @@ class Follow(models.Model):
 
     def __str__(self):
         return f'{self.user} подписался на {self.author}'
+    
+    def save(self, **kwargs):
+        if self.user == self.author:
+            raise ValidationError("Невозможно подписаться на себя")
+        super().save()
 
+    
+    
 
 class Favorite(models.Model):
     """Модель избранное."""

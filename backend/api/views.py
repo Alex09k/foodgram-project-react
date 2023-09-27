@@ -36,7 +36,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeCreateSerializer
 
     @staticmethod
-    def create_recipe(request, pk, serializers):
+    def create_object(request, pk, serializers):
         data = {'user': request.user.id, 'recipe': pk}
         serializer = serializers(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -44,7 +44,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
-    def delete_recipe(model, request, pk):
+    def delete_object(model, request, pk):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
         object = get_object_or_404(model, user=user, recipe=recipe)
@@ -54,9 +54,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def _create_or_destroy(self, http_method, recipe, key,
                            model, serializer):
         if http_method == 'POST':
-            return self.create_recipe(request=recipe, pk=key,
+            return self.create_object(request=recipe, pk=key,
                                       serializers=serializer)
-        return self.delete_recipe(request=recipe, pk=key, model=model)
+        return self.delete_object(request=recipe, pk=key, model=model)
 
     @action(
         detail=True,
