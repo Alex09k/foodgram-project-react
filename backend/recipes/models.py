@@ -12,11 +12,6 @@ from rest_framework.exceptions import ValidationError
 from users.models import CustomUser
 
 
-# def validate_M2M(value):
-#     if not value.exists():
-#         raise ValidationError('Поле не должно быть пусым!')
-
-
 class Recipe(models.Model):
     """Модель рецепта."""
 
@@ -77,14 +72,15 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Модель ингридиентов."""
 
-    name = models.CharField(max_length=NUMBER_SYMBOLS, verbose_name='Ингридиент',
+    name = models.CharField(max_length=NUMBER_SYMBOLS,
+                            verbose_name='Ингридиент',
                             help_text='Введите ингредиент',
                             )
     measurement_unit = models.CharField(max_length=NUMBER_SYMBOLS,
                                         verbose_name='Единица измерения',
                                         help_text='Введите единицу измерения',
                                         )
-    
+
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
@@ -148,14 +144,12 @@ class Follow(models.Model):
 
     def __str__(self):
         return f'{self.user} подписался на {self.author}'
-    
+
     def save(self, **kwargs):
         if self.user == self.author:
             raise ValidationError("Невозможно подписаться на себя")
         super().save()
 
-    
-    
 
 class Favorite(models.Model):
     """Модель избранное."""
