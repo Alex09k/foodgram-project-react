@@ -8,7 +8,8 @@ from users.models import CustomUser
 from .serializers import (RecipeSerializer, IngredientSerializer,
                           TagSerializer, CustomUserSerializer,
                           RecipeCreateSerializer, FollowSerializer,
-                          FavoriteSerializer, ShoppingCartSerializer)
+                          FavoriteSerializer, ShoppingCartSerializer,
+                          CreateFollowSerializer)
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
@@ -20,7 +21,7 @@ from .paginators import RecipePagination
 from .filters import IngredientFilter, RecipeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
-from django.http import FileResponse
+from .utils import get_shopping_list
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -81,25 +82,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['GET'],
         permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        user = request.user
-        purchases = ShoppingCart.objects.filter(user=user)
-        file = 'shopping-list.txt'
-        with open(file, 'w') as f:
-            shop_cart = dict()
-            for purchase in purchases:
-                ingredients = IngredientRecipe.objects.filter(
-                    recipe=purchase.recipe.id
-                )
-                for r in ingredients:
-                    i = Ingredient.objects.get(pk=r.ingredient.id)
-                    point_name = f'{i.name} ({i.measurement_unit})'
-                    if point_name in shop_cart.keys():
-                        shop_cart[point_name] += r.amount
-                    else:
-                        shop_cart[point_name] = r.amount
-            for name, amount in shop_cart.items():
-                f.write(f'* {name} - {amount}\n')
-        return FileResponse(open(file, 'rb'), as_attachment=True)
+        try:
+            return get_shopping_list(request)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -129,37 +116,48 @@ class CustomUserViewSet(UserViewSet):
         permission_classes=(IsAuthenticated, ))
     def subscriptions(self, request):
         queryset = CustomUser.objects.filter(followed__user=request.user)
-        if queryset:
-            pages = self.paginate_queryset(queryset)
-            serializer = FollowSerializer(pages, many=True,
+        pages = self.paginate_queryset(queryset)
+        serializer = FollowSerializer(pages, many=True,
                                           context={'request': request})
-            return self.get_paginated_response(serializer.data)
-        return Response('У Вас нет подписок.',
-                        status=status.HTTP_400_BAD_REQUEST)
+        return self.get_paginated_response(serializer.data)
+        
 
     @action(
         detail=True,
         methods=('post',),
         permission_classes=(IsAuthenticated,))
-    def subscribe(self, request, id):
-        user = request.user
-        author = get_object_or_404(CustomUser, id=id)
-        subscription = Follow.objects.filter(
-            user=user.id, author=author.id
+    def subscribe(self, request, id=None):
+        # user = request.user
+        # # author = get_object_or_404(CustomUser, id=id)
+        # author_id = self.kwargs.get('id')
+        # author = get_object_or_404(CustomUser, id=author_id)
+        # subscription = Follow.objects.filter(
+        #     user=user.id, author=author.id
+        # )
+        # if user == author:
+        #     return Response('На себя подписываться нельзя!',
+        #                     status=status.HTTP_400_BAD_REQUEST)
+        # if subscription.exists():
+        #     return Response(f'Вы уже подписаны на {author}',
+        #                     status=status.HTTP_400_BAD_REQUEST)
+        # serializer = FollowSerializer(author,
+        #                                      data=request.data,
+        #                                      context={"request": request})
+        # serializer.is_valid(raise_exception=True)
+        # subscribe = Follow.objects.create(
+        #     user=user,
+        #     author=author
+        # )
+        # subscribe.save()
+        # return Response(f'Вы подписались на {author}',
+        #                 status=status.HTTP_201_CREATED)
+        serializer = CreateFollowSerializer(
+            data=dict(author=id, user=request.user.id),
+            context={'request': request}
         )
-        if user == author:
-            return Response('На себя подписываться нельзя!',
-                            status=status.HTTP_400_BAD_REQUEST)
-        if subscription.exists():
-            return Response(f'Вы уже подписаны на {author}',
-                            status=status.HTTP_400_BAD_REQUEST)
-        subscribe = Follow.objects.create(
-            user=user,
-            author=author
-        )
-        subscribe.save()
-        return Response(f'Вы подписались на {author}',
-                        status=status.HTTP_201_CREATED)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)        
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):

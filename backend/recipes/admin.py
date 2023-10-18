@@ -4,10 +4,16 @@ from .models import (Ingredient, Tag, Recipe, IngredientRecipe,
                      Favorite, Follow,
                      ShoppingCart)
 
+from foodgram.constants import INGREDIENT_MIN_AMOUNT
+
+INGREDIENT_MIN_AMOUNT_ERROR = (
+    'Количество ингредиента не может быть меньше 1!'
+)
 
 class IngredientRecipeInline(admin.TabularInline):
     """в понели администратора модель IngredientIntermediate."""
     model = IngredientRecipe
+    min_num = 1
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -48,8 +54,8 @@ class RecipeAdmin(admin.ModelAdmin):
     @staticmethod
     def amount_tags(obj):
         return "\n".join([i[0] for i in obj.tags.values_list('name')])
-
-
+    
+    
 class FavoriteAdmin(admin.ModelAdmin):
     """в понели администратора модель Favourite."""
     list_display = ('id', 'user', 'recipe')

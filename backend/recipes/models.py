@@ -12,6 +12,11 @@ from rest_framework.exceptions import ValidationError
 from users.models import CustomUser
 
 
+# def validate_M2M(value):
+#     if not value.exists():
+#         raise ValidationError('Поле не должно быть пусым!')
+
+
 class Recipe(models.Model):
     """Модель рецепта."""
 
