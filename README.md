@@ -55,7 +55,7 @@
 # По адресу http://127.0.0.1:8000/ сайт будет доступен.
 
 - Для работы с Workflow добавьте в Secrets GitHub переменные окружения для работы:
-    DB_ENGINE=<django.db.backends.postgresql>
+   `DB_ENGINE=<django.db.backends.postgresql>
     DB_NAME=<имя базы данных postgres>
     DB_USER=<пользователь бд>
     DB_PASSWORD=<пароль>
@@ -73,7 +73,7 @@
     SSH_KEY=<ваш SSH ключ (для получения команда: cat ~/.ssh/id_rsa)>
 
     TELEGRAM_TO=<ID чата, в который придет сообщение>
-    TELEGRAM_TOKEN=<токен вашего бота>
+    TELEGRAM_TOKEN=<токен вашего бота>`
 
 - Workflow состоит из трёх шагов:
 1. Проверка кода на соответствие PEP8
