@@ -152,8 +152,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Необходимо указать как минимум один тег'
             )
-        return value 
-        
+        return value
+
     def add_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             ingredient_amount = ingredient.pop('amount')
@@ -166,8 +166,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 amount=ingredient_amount
             )
             recipe.ingredients.add(ingredient_obj)
-        return recipe        
-       
+        return recipe
+
     @transaction.atomic
     def create(self, validated_data):
         author = self.context.get('request').user
@@ -219,7 +219,7 @@ class FollowSerializer(CustomUserSerializer):
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'recipes', 'recipes_count',)
-        
+
     def get_recipes(self, obj):
         request = self.context.get('request')
         recipes = obj.recipes.all()
@@ -231,7 +231,7 @@ class FollowSerializer(CustomUserSerializer):
     @staticmethod
     def get_recipes_count(obj):
         return obj.recipes.count()
-    
+
 
 class CreateFollowSerializer(serializers.ModelSerializer):
     user = serializers.IntegerField(source='user.id')
@@ -260,7 +260,7 @@ class CreateFollowSerializer(serializers.ModelSerializer):
         author = get_object_or_404(CustomUser, pk=author.get('id'))
         user = CustomUser.objects.get(id=validated_data['user']['id'])
         Follow.objects.create(user=user, author=author)
-        return validated_data        
+        return validated_data
 
 
 class ShoppingCartSerializer(RecipeListSerializer):
