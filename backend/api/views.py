@@ -1,8 +1,7 @@
 from rest_framework import viewsets, status
 from recipes.models import (Favorite, Follow,
                             Ingredient, Recipe,
-                            ShoppingCart, IngredientRecipe,
-                            Tag)
+                            ShoppingCart, Tag)
 from users.models import CustomUser
 
 from .serializers import (RecipeSerializer, IngredientSerializer,
@@ -84,7 +83,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         try:
             return get_shopping_list(request)
-        except:
+        except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
