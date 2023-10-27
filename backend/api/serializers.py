@@ -14,6 +14,13 @@ from .utils import representation
 from users.models import CustomUser
 
 
+class TagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'color', 'slug')
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
     name = serializers.ReadOnlyField()
@@ -22,13 +29,6 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit')
-
-
-class TagSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Tag
-        fields = ('id', 'name', 'color', 'slug')
 
 
 class RecipeListSerializer(serializers.ModelSerializer):
