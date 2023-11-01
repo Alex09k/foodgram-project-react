@@ -23,7 +23,6 @@ from .serializers import (RecipeSerializer,
                           ShoppingCartSerializer,
                           CreateFollowSerializer)
 from recipes.models import (Favorite,
-                            Follow,
                             Ingredient,
                             Recipe,
                             ShoppingCart,
