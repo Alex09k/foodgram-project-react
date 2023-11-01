@@ -1,26 +1,33 @@
 from rest_framework import viewsets, status
-from recipes.models import (Favorite, Follow,
-                            Ingredient, Recipe,
-                            ShoppingCart, Tag)
-from users.models import CustomUser
-
-from .serializers import (RecipeSerializer, IngredientSerializer,
-                          TagSerializer, CustomUserSerializer,
-                          RecipeCreateSerializer, FollowSerializer,
-                          FavoriteSerializer, ShoppingCartSerializer,
-                          CreateFollowSerializer)
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework.decorators import action
-from .permissions import IsAuthorAdminOrReadOnly
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import (AllowAny,
+                                        IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+
+from users.models import CustomUser
+from .permissions import IsAuthorAdminOrReadOnly
 from .paginators import RecipePagination
 from .filters import IngredientFilter, RecipeFilter
-from django_filters.rest_framework import DjangoFilterBackend
-
 from .utils import get_shopping_list
+from .serializers import (RecipeSerializer,
+                          IngredientSerializer,
+                          TagSerializer,
+                          CustomUserSerializer,
+                          RecipeCreateSerializer,
+                          FollowSerializer,
+                          FavoriteSerializer,
+                          ShoppingCartSerializer,
+                          CreateFollowSerializer)
+from recipes.models import (Favorite,
+                            Follow,
+                            Ingredient,
+                            Recipe,
+                            ShoppingCart,
+                            Tag)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -136,8 +143,8 @@ class CustomUserViewSet(UserViewSet):
     def delete_subscribe(self, request, id):
         user = request.user
         author = get_object_or_404(CustomUser, id=id)
-        change_subscription = Follow.objects.filter(
-            user=user.id, author=author.id
+        change_subscription = user.follower.filter(
+            author=author.id
         )
         change_subscription.delete()
         return Response(f'Вы больше не подписаны на {author}',
