@@ -1,4 +1,3 @@
-
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from rest_framework import serializers
@@ -208,7 +207,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe')
 
     def validate(self, data):
-        user, recipe = data.get('user'), data.get('recipe')
+        user = self.context['request'].user
+        recipe = data.get('recipe')
         if user.favorites.filter(recipe=recipe).exists():
             raise serializers.ValidationError('Рецепты не могут повторяться!')
         return data

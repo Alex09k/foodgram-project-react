@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -86,11 +87,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=['GET'],
         permission_classes=(IsAuthenticated,))
-    def download_shopping_cart(self, request):
-        try:
-            return get_shopping_list(request)
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+    def download_shopping_cart(self, user):
+        shopping_cart = get_shopping_list(user)
+        filename = 'shopping-list.txt'
+        response = HttpResponse(shopping_cart, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
