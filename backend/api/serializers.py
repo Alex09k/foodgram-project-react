@@ -243,7 +243,6 @@ class FollowSerializer(CustomUserSerializer):
 
 
 class CreateFollowSerializer(serializers.ModelSerializer):
-    user = serializers.IntegerField(source='user.id')
     author = serializers.IntegerField(source='author.id')
 
     class Meta:
@@ -253,7 +252,7 @@ class CreateFollowSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         author = validated_data['author']
         author = get_object_or_404(CustomUser, pk=author.get('id'))
-        user = CustomUser.objects.get(id=validated_data['user']['id'])
+        user = self.context['request'].user
         Follow.objects.create(user=user, author=author)
         return validated_data
 
